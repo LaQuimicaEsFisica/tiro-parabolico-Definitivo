@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Applet de tiro parabólico</title>
+  <style>
+    :root{
+      --bg:#eef4ff;
+      --card:#ffffff;
+      --text:#1f2937;
+      --muted:#64748b;
+      --line:#cbd5e1;
+      --blue:#2563eb;
+      --blue2:#93c5fd;
+      --green:#15803d;
+      --green2:#84cc16;
+      --red:#ef4444;
+      --teal:#0f766e;
+      --purple:#7c3aed;
+      --amber:#d97706;
+      --shadow:0 10px 25px rgba(15,23,42,.08);
+      --radius:20px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial, Helvetica, sans-serif;
+      color:var(--text);
+      background:linear-gradient(180deg,#f5f8ff 0%,#eef4ff 100%);
+    }
+    .wrap{
+      max-width:1450px;
+      margin:0 auto;
+      padding:18px;
+      display:grid;
+      grid-template-columns:360px 1fr;
+      gap:18px;
+    }
+    .card{
+      background:var(--card);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:18px;
+    }
+    h1,h2,h3{margin:0 0 10px}
+    h1{font-size:28px}
+    h2{font-size:22px}
+    p{color:var(--muted); line-height:1.4}
+    .controls .group{margin-bottom:18px}
+    .controls .rowlabel{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      font-weight:700;
+      font-size:14px;
+      margin-bottom:8px;
+    }
+    .controls input[type="number"]{
+      width:92px;
+      padding:8px 10px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      font-size:14px;
+      text-align:right;
+      background:#fff;
+    }
+    .controls input[type="range"]{ width:100%; }
+    .toggles{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-bottom:18px;
+    }
+    .toggle{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px;
+      background:#f8fafc;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      font-size:14px;
+      font-weight:700;
+      gap:8px;
+    }
+    .buttons{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:8px;
+    }
+    button{
+      border:0;
+      border-radius:14px;
+      padding:11px 14px;
+      font-weight:700;
+      cursor:pointer;
+      background:#2563eb;
+      color:white;
+    }
+    button.secondary{background:#e2e8f0;color:#0f172a}
+    button.outline{background:white;color:#0f172a;border:1px solid var(--line)}
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:12px;
+      margin-bottom:18px;
+    }
+    .stat{
+      background:white;
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      padding:14px 16px;
+    }
+    .stat .k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+    .stat .v{font-size:24px;font-weight:700;margin-top:4px}
+    .scene{
+      width:100%;
+      display:block;
+      border-radius:22px;
+      background:linear-gradient(180deg,#dbeafe 0%,#eff6ff 60%,#ecfccb 100%);
+      border:1px solid #dbeafe;
+    }
+    .grid-2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:18px;
+    }
+    .formula{
+      font-family:"Courier New", monospace;
+      background:#f8fafc;
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+      line-height:1.7;
+    }
+    .tabbar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-bottom:12px;
+    }
+    .tabbtn{
+      background:#e2e8f0;
+      color:#0f172a;
+      border:0;
+      padding:10px 14px;
+      border-radius:14px;
+    }
+    .tabbtn.active{ background:#2563eb; color:white; }
+    .tab{ display:none; }
+    .tab.active{ display:block; }
+    .tableWrap{
+      max-height:420px;
+      overflow:auto;
+      border:1px solid var(--line);
+      border-radius:18px;
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      background:white;
+      font-size:14px;
+    }
+    thead th{
+      position:sticky;
+      top:0;
+      background:#f1f5f9;
+      z-index:1;
+    }
+    th,td{
+      padding:10px 12px;
+      border-bottom:1px solid #e2e8f0;
+      text-align:left;
+      white-space:nowrap;
+    }
+    tbody tr:nth-child(even){background:#fafcff}
+    .chart{
+      width:100%;
+      height:auto;
+      display:block;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:#fbfdff;
+    }
+    .small-stats{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:12px;
+      margin-top:14px;
+    }
+    .footer-note{
+      margin-top:10px;
+      font-size:13px;
+      color:var(--muted);
+    }
+    .click-info{
+      margin-top:12px;
+      padding:12px 14px;
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:#f8fafc;
+      font-size:14px;
+      color:#334155;
+    }
+    .legend{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      margin-top:10px;
+      font-size:13px;
+      color:#475569;
+    }
+    .legend-item{
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+    .swatch{
+      width:18px;
+      height:4px;
+      border-radius:999px;
+      display:inline-block;
+    }
+    @media (max-width:1100px){
+      .wrap{grid-template-columns:1fr}
+      .stats,.small-stats{grid-template-columns:repeat(2,1fr)}
+      .grid-2{grid-template-columns:1fr}
+    }
+    @media (max-width:640px){
+      .stats,.small-stats,.toggles{grid-template-columns:1fr}
+      .wrap{padding:10px}
+      .card{padding:14px}
+      h1{font-size:22px}
+      .stat .v{font-size:20px}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card controls">
+      <h1>Applet de tiro parabólico</h1>
+      <p>Modifica altura inicial, velocidad y ángulo. Incluye parte analítica, tabla de datos, exportación y representación vectorial.</p>
+
+      <div class="group">
+        <div class="rowlabel">Velocidad inicial v₀ (m/s) <input id="v0Num" type="number" min="0" max="100" step="0.5" value="24"></div>
+        <input id="v0" type="range" min="0" max="100" step="0.5" value="24">
+      </div>
+
+      <div class="group">
+        <div class="rowlabel">Ángulo con la horizontal (°) <input id="angleNum" type="number" min="0" max="89" step="0.5" value="45"></div>
+        <input id="angle" type="range" min="0" max="89" step="0.5" value="45">
+      </div>
+
+      <div class="group">
+        <div class="rowlabel">Altura inicial y₀ (m) <input id="y0Num" type="number" min="0" max="50" step="0.1" value="2"></div>
+        <input id="y0" type="range" min="0" max="50" step="0.1" value="2">
+      </div>
+
+      <div class="group">
+        <div class="rowlabel">Velocidad de animación <input id="speedNum" type="number" min="0.2" max="3" step="0.1" value="1"></div>
+        <input id="speed" type="range" min="0.2" max="3" step="0.1" value="1">
+      </div>
+
+      <div class="toggles">
+        <div class="toggle">Trayectoria <input id="showTrail" type="checkbox" checked></div>
+        <div class="toggle">Trayectoria completa <input id="showGhost" type="checkbox" checked></div>
+        <div class="toggle">Rejilla <input id="showGrid" type="checkbox" checked></div>
+        <div class="toggle">Vector posición r(t) <input id="showR" type="checkbox"></div>
+        <div class="toggle">Componente horizontal vₓ <input id="showVx" type="checkbox"></div>
+        <div class="toggle">Componente vertical vᵧ <input id="showVy" type="checkbox"></div>
+        <div class="toggle">Vector velocidad actual <input id="showVectors" type="checkbox" checked></div>
+        <div class="toggle">Velocidad en trayectoria <input id="showVelField" type="checkbox"></div>
+        <div class="toggle">Aceleración actual <input id="showAcc" type="checkbox"></div>
+        <div class="toggle">Aceleración en trayectoria <input id="showAccField" type="checkbox"></div>
+      </div>
+
+      <div class="buttons">
+        <button id="playBtn">▶ Reproducir</button>
+        <button id="backBtn" class="secondary">◀ Hacia atrás</button>
+        <button id="resetBtn" class="secondary">↺ Reiniciar</button>
+        <button id="csvBtn" class="outline">⬇ Exportar CSV</button>
+        <button id="excelBtn" class="outline">⬇ Exportar Excel</button>
+        <button id="copyTableBtn" class="outline">📋 Copiar tabla</button>
+      </div>
+
+      <div class="footer-note">
+        El archivo es autónomo. Puedes subirlo a la web y luego incrustar su URL en Google Sites.
+      </div>
+    </div>
+
+    <div>
+      <div class="stats">
+        <div class="stat"><div class="k">Tiempo de vuelo</div><div class="v" id="statFlight">0.00 s</div></div>
+        <div class="stat"><div class="k">Alcance</div><div class="v" id="statRange">0.00 m</div></div>
+        <div class="stat"><div class="k">Altura máxima</div><div class="v" id="statMaxH">0.00 m</div></div>
+        <div class="stat"><div class="k">Rapidez actual</div><div class="v" id="statSpeed">0.00 m/s</div></div>
+      </div>
+
+      <div class="card">
+        <h2>Simulación visual</h2>
+        <canvas id="scene" class="scene" width="960" height="500"></canvas>
+        <div class="legend">
+          <div class="legend-item"><span class="swatch" style="background:#2563eb"></span> trayectoria</div>
+          <div class="legend-item"><span class="swatch" style="background:#0f766e"></span> velocidad</div>
+          <div class="legend-item"><span class="swatch" style="background:#d97706"></span> aceleración</div>
+          <div class="legend-item"><span class="swatch" style="background:#7c3aed"></span> posición</div>
+        </div>
+        <div class="click-info" id="clickInfo">Haz clic sobre la trayectoria para ver el tiempo y la posición del punto más cercano.</div>
+        <div class="small-stats">
+          <div class="stat"><div class="k">t actual</div><div class="v" id="statT">0.00 s</div></div>
+          <div class="stat"><div class="k">x actual</div><div class="v" id="statX">0.00 m</div></div>
+          <div class="stat"><div class="k">y actual</div><div class="v" id="statY">0.00 m</div></div>
+          <div class="stat"><div class="k">vy actual</div><div class="v" id="statVy">0.00 m/s</div></div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top:18px;">
+        <div class="card">
+          <h2>Parte analítica</h2>
+          <div class="formula" id="formulaBox"></div>
+        </div>
+        <div class="card">
+          <h2>Parámetros actuales</h2>
+          <div class="formula" id="paramBox"></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:18px;">
+        <h2>Tablas y gráficas automáticas</h2>
+        <div class="tabbar">
+          <button class="tabbtn active" data-tab="tabla">Tabla</button>
+          <button class="tabbtn" data-tab="xt">x(t)</button>
+          <button class="tabbtn" data-tab="yt">y(t)</button>
+          <button class="tabbtn" data-tab="vyt">vᵧ(t)</button>
+          <button class="tabbtn" data-tab="yx">y(x)</button>
+        </div>
+
+        <div id="tabla" class="tab active">
+          <div class="tableWrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>t (s)</th>
+                  <th>x (m)</th>
+                  <th>y (m)</th>
+                  <th>vx (m/s)</th>
+                  <th>vy (m/s)</th>
+                  <th>ax (m/s²)</th>
+                  <th>ay (m/s²)</th>
+                  <th>v (m/s)</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyData"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="xt" class="tab"><canvas id="chartXT" class="chart" width="930" height="340"></canvas></div>
+        <div id="yt" class="tab"><canvas id="chartYT" class="chart" width="930" height="340"></canvas></div>
+        <div id="vyt" class="tab"><canvas id="chartVYT" class="chart" width="930" height="340"></canvas></div>
+        <div id="yx" class="tab"><canvas id="chartYX" class="chart" width="930" height="340"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const G = 9.8;
+    const DT_TABLE = 0.1;
+    const scene = document.getElementById('scene');
+    const sctx = scene.getContext('2d');
+    const $ = (id) => document.getElementById(id);
+
+    const controls = {
+      v0: $('v0'),
+      v0Num: $('v0Num'),
+      angle: $('angle'),
+      angleNum: $('angleNum'),
+      y0: $('y0'),
+      y0Num: $('y0Num'),
+      speed: $('speed'),
+      speedNum: $('speedNum'),
+      showTrail: $('showTrail'),
+      showGhost: $('showGhost'),
+      showGrid: $('showGrid'),
+      showVectors: $('showVectors'),
+      showVx: $('showVx'),
+      showVy: $('showVy'),
+      showVelField: $('showVelField'),
+      showAcc: $('showAcc'),
+      showAccField: $('showAccField'),
+      showR: $('showR'),
+      playBtn: $('playBtn'),
+      backBtn: $('backBtn'),
+      resetBtn: $('resetBtn'),
+      csvBtn: $('csvBtn'),
+      excelBtn: $('excelBtn'),
+      copyTableBtn: $('copyTableBtn')
+    };
+
+    let state = {
+      playing: false,
+      direction: 1,
+      t: 0,
+      lastTime: null,
+      selectedPoint: null
+    };
+
+    function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+    function fmt(v, d=2){ return Number(v).toFixed(d); }
+
+    function setNumericPair(rangeEl, numberEl, value, min, max) {
+      const v = clamp(Number(value), min, max);
+      rangeEl.value = v;
+      numberEl.value = v;
+    }
+
+    function bindPair(rangeEl, numberEl, min, max) {
+      rangeEl.addEventListener('input', () => {
+        numberEl.value = rangeEl.value;
+        onParamsChange();
+      });
+      numberEl.addEventListener('input', () => {
+        if (numberEl.value === '') return;
+        const v = clamp(Number(numberEl.value), min, max);
+        numberEl.value = v;
+        rangeEl.value = v;
+        onParamsChange();
+      });
+      numberEl.addEventListener('change', () => {
+        const raw = numberEl.value === '' ? min : Number(numberEl.value);
+        const v = clamp(raw, min, max);
+        numberEl.value = v;
+        rangeEl.value = v;
+        onParamsChange();
+      });
+    }
+
+    setNumericPair(controls.v0, controls.v0Num, 24, 0, 100);
+    setNumericPair(controls.angle, controls.angleNum, 45, 0, 89);
+    setNumericPair(controls.y0, controls.y0Num, 2, 0, 50);
+    setNumericPair(controls.speed, controls.speedNum, 1, 0.2, 3);
+
+    bindPair(controls.v0, controls.v0Num, 0, 100);
+    bindPair(controls.angle, controls.angleNum, 0, 89);
+    bindPair(controls.y0, controls.y0Num, 0, 50);
+    bindPair(controls.speed, controls.speedNum, 0.2, 3);
+
+    [
+      controls.showTrail, controls.showGhost, controls.showGrid, controls.showVectors,
+      controls.showVx, controls.showVy, controls.showVelField, controls.showAcc, controls.showAccField, controls.showR
+    ].forEach(el => el.addEventListener('change', drawAll));
+
+    scene.addEventListener('click', (ev) => {
+      const m = getModel();
+      const rows = buildRows(m);
+      const rect = scene.getBoundingClientRect();
+      const scaleX = scene.width / rect.width;
+      const scaleY = scene.height / rect.height;
+      const clickX = (ev.clientX - rect.left) * scaleX;
+      const clickY = (ev.clientY - rect.top) * scaleY;
+
+      const margin = 42;
+      const sx = (scene.width - 2 * margin) / Math.max(m.range * 1.15, 10);
+      const sy = (scene.height - 2 * margin) / Math.max(m.maxHeight * 1.2 + 3, 10);
+      const scale = Math.min(sx, sy);
+      const toCanvas = (x, y) => ({ x: margin + x * scale, y: scene.height - margin - y * scale });
+
+      let best = null;
+      let bestDist = Infinity;
+      for (const r of rows) {
+        const p = toCanvas(r.x, r.y);
+        const d = Math.hypot(p.x - clickX, p.y - clickY);
+        if (d < bestDist) {
+          bestDist = d;
+          best = { ...r, cx: p.x, cy: p.y };
+        }
+      }
+
+      if (best && bestDist <= 18) {
+        state.selectedPoint = best;
+        $('clickInfo').innerHTML = `Punto seleccionado → t = <strong>${fmt(best.t)}</strong> s, x = <strong>${fmt(best.x)}</strong> m, y = <strong>${fmt(best.y)}</strong> m`;
+      } else {
+        state.selectedPoint = null;
+        $('clickInfo').textContent = 'Haz clic sobre la trayectoria para ver el tiempo y la posición del punto más cercano.';
+      }
+      drawAll();
+    });
+
+    document.querySelectorAll('.tabbtn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tabbtn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        $(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    controls.playBtn.addEventListener('click', () => {
+      if (state.playing && state.direction === 1) {
+        state.playing = false;
+        controls.playBtn.textContent = '▶ Reproducir';
+      } else {
+        state.playing = true;
+        state.direction = 1;
+        controls.playBtn.textContent = '❚❚ Pausar';
+        controls.backBtn.textContent = '◀ Hacia atrás';
+      }
+      state.lastTime = null;
+    });
+
+    controls.backBtn.addEventListener('click', () => {
+      if (state.playing && state.direction === -1) {
+        state.playing = false;
+        controls.backBtn.textContent = '◀ Hacia atrás';
+      } else {
+        state.playing = true;
+        state.direction = -1;
+        controls.backBtn.textContent = '❚❚ Pausar retroceso';
+        controls.playBtn.textContent = '▶ Reproducir';
+      }
+      state.lastTime = null;
+    });
+
+    controls.resetBtn.addEventListener('click', () => {
+      state.playing = false;
+      state.direction = 1;
+      state.t = 0;
+      state.lastTime = null;
+      controls.playBtn.textContent = '▶ Reproducir';
+      controls.backBtn.textContent = '◀ Hacia atrás';
+      drawAll();
+    });
+
+    controls.csvBtn.addEventListener('click', exportCSV);
+    controls.excelBtn.addEventListener('click', exportExcel);
+    controls.copyTableBtn.addEventListener('click', copyTableToClipboard);
+
+    function getModel(){
+      const v0 = Number(controls.v0.value);
+      const angle = Number(controls.angle.value);
+      const y0 = Number(controls.y0.value);
+      const speedFactor = Number(controls.speed.value);
+      const angleRad = angle * Math.PI / 180;
+      const vx0 = v0 * Math.cos(angleRad);
+      const vy0 = v0 * Math.sin(angleRad);
+      const disc = vy0 * vy0 + 2 * G * y0;
+      const flightTime = (vy0 + Math.sqrt(Math.max(disc, 0))) / G;
+      const maxHeight = y0 + (vy0 * vy0) / (2 * G);
+      const range = vx0 * flightTime;
+      return { v0, angle, y0, speedFactor, angleRad, vx0, vy0, flightTime, maxHeight, range };
+    }
+
+    function pointAt(t, m){
+      const x = m.vx0 * t;
+      const y = Math.max(0, m.y0 + m.vy0 * t - 0.5 * G * t * t);
+      const vx = m.vx0;
+      const vy = m.vy0 - G * t;
+      const ax = 0;
+      const ay = -G;
+      const v = Math.sqrt(vx*vx + vy*vy);
+      return { t, x, y, vx, vy, ax, ay, v };
+    }
+
+    function buildRows(m){
+      const rows = [];
+      for(let t=0; t<=m.flightTime+1e-9; t+=DT_TABLE) rows.push(pointAt(t, m));
+      if (rows.length === 0 || rows[rows.length-1].t < m.flightTime - 1e-9) rows.push(pointAt(m.flightTime, m));
+      return rows;
+    }
+
+    function onParamsChange(){
+      state.playing = false;
+      state.direction = 1;
+      state.t = 0;
+      state.lastTime = null;
+      controls.playBtn.textContent = '▶ Reproducir';
+      controls.backBtn.textContent = '◀ Hacia atrás';
+      drawAll();
+    }
+
+    function updatePanels(m, current){
+      $('statFlight').textContent = fmt(m.flightTime) + ' s';
+      $('statRange').textContent = fmt(m.range) + ' m';
+      $('statMaxH').textContent = fmt(m.maxHeight) + ' m';
+      $('statSpeed').textContent = fmt(current.v) + ' m/s';
+      $('statT').textContent = fmt(current.t) + ' s';
+      $('statX').textContent = fmt(current.x) + ' m';
+      $('statY').textContent = fmt(current.y) + ' m';
+      $('statVy').textContent = fmt(current.vy) + ' m/s';
+
+      $('formulaBox').innerHTML = [
+        '<strong>Ecuaciones horarias</strong><br>',
+        `x(t) = ${fmt(m.vx0)}·t<br>`,
+        `y(t) = ${fmt(m.y0)} + ${fmt(m.vy0)}·t - 4.90·t²<br><br>`,
+        `v<sub>x</sub>(t) = ${fmt(m.vx0)} m/s<br>`,
+        `v<sub>y</sub>(t) = ${fmt(m.vy0)} - 9.80·t<br><br>`,
+        `a<sub>x</sub>(t) = 0<br>`,
+        `a<sub>y</sub>(t) = -9.80 m/s²`
+      ].join('');
+
+      $('paramBox').innerHTML = [
+        '<strong>Magnitudes</strong><br>',
+        `v₀ = ${fmt(m.v0)} m/s<br>`,
+        `θ = ${fmt(m.angle)}°<br>`,
+        `y₀ = ${fmt(m.y0)} m<br>`,
+        `v₀x = ${fmt(m.vx0)} m/s<br>`,
+        `v₀y = ${fmt(m.vy0)} m/s<br>`,
+        `g = 9.80 m/s²<br><br>`,
+        `r(t) = x(t)\u00A0i + y(t)\u00A0j`
+      ].join('');
+    }
+
+    function roundRect(ctx, x, y, width, height, radius, fill, stroke){
+      if (typeof radius === 'number') radius = {tl:radius,tr:radius,br:radius,bl:radius};
+      ctx.beginPath();
+      ctx.moveTo(x+radius.tl, y);
+      ctx.lineTo(x+width-radius.tr, y);
+      ctx.quadraticCurveTo(x+width,y,x+width,y+radius.tr);
+      ctx.lineTo(x+width,y+height-radius.br);
+      ctx.quadraticCurveTo(x+width,y+height,x+width-radius.br,y+height);
+      ctx.lineTo(x+radius.bl,y+height);
+      ctx.quadraticCurveTo(x,y+height,x,y+height-radius.bl);
+      ctx.lineTo(x,y+radius.tl);
+      ctx.quadraticCurveTo(x,y,x+radius.tl,y);
+      ctx.closePath();
+      if (fill) ctx.fill();
+      if (stroke) ctx.stroke();
+    }
+
+    function circle(ctx, x, y, r){
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    function drawArrow(ctx, x1, y1, x2, y2, color, width=3){
+      const head = 10;
+      const angle = Math.atan2(y2 - y1, x2 - x1);
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = width;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - head * Math.cos(angle - Math.PI/6), y2 - head * Math.sin(angle - Math.PI/6));
+      ctx.lineTo(x2 - head * Math.cos(angle + Math.PI/6), y2 - head * Math.sin(angle + Math.PI/6));
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function drawArrowLabel(ctx, x1, y1, x2, y2, label, color){
+      const angle = Math.atan2(y2 - y1, x2 - x1);
+      let dx = 10 * Math.cos(angle);
+      let dy = 10 * Math.sin(angle);
+
+      // Special placement for R(t) to avoid overlap
+      if(label === 'R(t)'){
+        dx = -40;
+        dy = -20;
+      }
+
+      ctx.save();
+      ctx.fillStyle = color;
+      ctx.font = '12px Arial';
+      ctx.fillText(label, x2 + dx, y2 + dy);
+      ctx.restore();
+    }
+
+    function drawScene(m, current, rows){
+      const w = scene.width, h = scene.height;
+      const margin = 42;
+      sctx.clearRect(0,0,w,h);
+
+      const sx = (w - 2*margin) / Math.max(m.range * 1.15, 10);
+      const sy = (h - 2*margin) / Math.max(m.maxHeight * 1.2 + 3, 10);
+      const scale = Math.min(sx, sy);
+
+      const toCanvas = (x, y) => ({ x: margin + x * scale, y: h - margin - y * scale });
+
+      if (controls.showGrid.checked){
+        sctx.strokeStyle = '#cbd5e1';
+        sctx.lineWidth = 1;
+        sctx.setLineDash([4,6]);
+        for(let i=0;i<14;i++){
+          const x = margin + i * (w - 2*margin)/13;
+          sctx.beginPath();
+          sctx.moveTo(x, margin/2);
+          sctx.lineTo(x, h-margin);
+          sctx.stroke();
+        }
+        for(let i=0;i<8;i++){
+          const y = margin/2 + i * (h - 1.5*margin)/7;
+          sctx.beginPath();
+          sctx.moveTo(margin/2, y);
+          sctx.lineTo(w-margin/2, y);
+          sctx.stroke();
+        }
+        sctx.setLineDash([]);
+      }
+
+      sctx.fillStyle = '#84cc16';
+      sctx.fillRect(0, h-margin, w, margin);
+
+      sctx.strokeStyle = '#334155';
+      sctx.lineWidth = 2;
+      sctx.beginPath();
+      sctx.moveTo(margin/2, h-margin);
+      sctx.lineTo(w-margin/2, h-margin);
+      sctx.moveTo(margin, h-margin);
+      sctx.lineTo(margin, margin/2);
+      sctx.stroke();
+
+      function drawPath(data, color, width, dashed, maxT){
+        if (data.length < 2) return;
+        sctx.strokeStyle = color;
+        sctx.lineWidth = width;
+        sctx.setLineDash(dashed ? [7,8] : []);
+        sctx.beginPath();
+        let started = false;
+        for (const r of data){
+          if (maxT != null && r.t > maxT) break;
+          const p = toCanvas(r.x, r.y);
+          if (!started){ sctx.moveTo(p.x, p.y); started = true; }
+          else sctx.lineTo(p.x, p.y);
+        }
+        sctx.stroke();
+        sctx.setLineDash([]);
+      }
+
+      if (controls.showGhost.checked && controls.showTrail.checked) drawPath(rows, '#93c5fd', 2.5, true, null);
+      if (controls.showTrail.checked) drawPath(rows, '#2563eb', 3.5, false, current.t);
+
+      const tankBase = toCanvas(0, 0);
+      sctx.save();
+      sctx.translate(tankBase.x + 8, tankBase.y - 8);
+      sctx.fillStyle = '#166534';
+      roundRect(sctx, -42, -14, 64, 20, 6, true, false);
+      sctx.fillStyle = '#15803d';
+      roundRect(sctx, -16, -30, 26, 16, 4, true, false);
+      sctx.fillStyle = '#1f2937';
+      circle(sctx, -24, 10, 9);
+      circle(sctx, -2, 10, 9);
+      circle(sctx, 20, 10, 9);
+      sctx.strokeStyle = '#374151';
+      sctx.lineWidth = 8;
+      sctx.lineCap = 'round';
+      sctx.beginPath();
+      sctx.moveTo(-4, -22);
+      sctx.lineTo(-4 + 36*Math.cos(m.angleRad), -22 - 36*Math.sin(m.angleRad));
+      sctx.stroke();
+      sctx.restore();
+
+      if (controls.showVelField.checked || controls.showAccField.checked){
+        const step = Math.max(1, Math.floor(rows.length / 18));
+        for(let i=0; i<rows.length; i+=step){
+          const r = rows[i];
+          const p = toCanvas(r.x, r.y);
+
+          if (controls.showVelField.checked){
+            const velScale = 1.6;
+            drawArrow(sctx, p.x, p.y, p.x + r.vx * velScale, p.y - r.vy * velScale, '#0f766e', 2);
+          }
+
+          if (controls.showAccField.checked){
+            const accScale = 5.5;
+            drawArrow(sctx, p.x, p.y, p.x + r.ax * accScale, p.y - r.ay * accScale, '#d97706', 2);
+          }
+        }
+      }
+
+      const proj = toCanvas(current.x, current.y);
+
+      if (controls.showR.checked){
+        drawArrow(sctx, margin, h - margin, proj.x, proj.y, '#7c3aed', 3);
+        drawArrowLabel(sctx, margin, h - margin, proj.x, proj.y, 'R(t)', '#7c3aed');
+      }
+
+      if (controls.showVectors.checked){
+        const velScale = 2.4;
+        const x2 = proj.x + current.vx * velScale;
+        const y2 = proj.y - current.vy * velScale;
+        drawArrow(sctx, proj.x, proj.y, x2, y2, '#0f766e', 3);
+        drawArrowLabel(sctx, proj.x, proj.y, x2, y2, 'V', '#0f766e');
+      }
+
+      if (controls.showVx.checked){
+        const velScale = 2.4;
+        const x2 = proj.x + current.vx * velScale;
+        const y2 = proj.y;
+        drawArrow(sctx, proj.x, proj.y, x2, y2, '#0ea5a4', 3);
+        drawArrowLabel(sctx, proj.x, proj.y, x2, y2, 'Vx', '#0ea5a4');
+      }
+
+      if (controls.showVy.checked){
+        const velScale = 2.4;
+        const x2 = proj.x;
+        const y2 = proj.y - current.vy * velScale;
+        drawArrow(sctx, proj.x, proj.y, x2, y2, '#8b5cf6', 3);
+        drawArrowLabel(sctx, proj.x, proj.y, x2, y2, 'Vy', '#8b5cf6');
+      }
+
+      if (controls.showAcc.checked){
+        const accScale = 6.5;
+        const x2 = proj.x + current.ax * accScale;
+        const y2 = proj.y - current.ay * accScale;
+        drawArrow(sctx, proj.x, proj.y, x2, y2, '#d97706', 3);
+        drawArrowLabel(sctx, proj.x, proj.y, x2, y2, 'a', '#d97706');
+      }
+
+      sctx.fillStyle = '#ef4444';
+      circle(sctx, proj.x, proj.y, 6);
+
+      if (state.selectedPoint){
+        sctx.strokeStyle = '#111827';
+        sctx.lineWidth = 2;
+        sctx.beginPath();
+        sctx.arc(state.selectedPoint.cx, state.selectedPoint.cy, 9, 0, Math.PI * 2);
+        sctx.stroke();
+
+        sctx.fillStyle = '#111827';
+        sctx.font = '12px Arial';
+        const label = `t=${fmt(state.selectedPoint.t)} s, x=${fmt(state.selectedPoint.x)} m, y=${fmt(state.selectedPoint.y)} m`;
+        const tx = Math.min(w - 210, state.selectedPoint.cx + 12);
+        const ty = Math.max(20, state.selectedPoint.cy - 12);
+        sctx.fillText(label, tx, ty);
+      }
+
+      sctx.fillStyle = '#334155';
+      sctx.font = '12px Arial';
+      sctx.fillText('y (m)', 18, 24);
+      sctx.textAlign = 'right';
+      sctx.fillText('x (m)', w-18, h-12);
+      sctx.textAlign = 'left';
+    }
+
+    function fillTable(rows){
+      $('tbodyData').innerHTML = rows.map(r => `
+        <tr>
+          <td>${fmt(r.t)}</td>
+          <td>${fmt(r.x)}</td>
+          <td>${fmt(r.y)}</td>
+          <td>${fmt(r.vx)}</td>
+          <td>${fmt(r.vy)}</td>
+          <td>${fmt(r.ax)}</td>
+          <td>${fmt(r.ay)}</td>
+          <td>${fmt(r.v)}</td>
+        </tr>
+      `).join('');
+    }
+
+    function drawChart(canvasId, data, xKey, yKey, title, xLabel, yLabel){
+      const canvas = $(canvasId);
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width, h = canvas.height;
+      const pad = 48;
+      ctx.clearRect(0,0,w,h);
+
+      const xs = data.map(d => d[xKey]);
+      const ys = data.map(d => d[yKey]);
+      const xmin = Math.min(...xs), xmax = Math.max(...xs);
+      const ymin = Math.min(...ys), ymax = Math.max(...ys);
+      const xspan = Math.max(1e-6, xmax - xmin);
+      const yspan = Math.max(1e-6, ymax - ymin);
+
+      const X = x => pad + (x - xmin) / xspan * (w - 2 * pad);
+      const Y = y => h - pad - (y - ymin) / yspan * (h - 2 * pad);
+
+      ctx.fillStyle = '#fbfdff';
+      ctx.fillRect(0,0,w,h);
+
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.lineWidth = 1;
+      ctx.font = '11px Arial';
+      ctx.fillStyle = '#475569';
+
+      for(let i=0;i<=5;i++){
+        const xv = xmin + i * xspan / 5;
+        const x = X(xv);
+        ctx.beginPath();
+        ctx.moveTo(x, pad);
+        ctx.lineTo(x, h-pad);
+        ctx.stroke();
+        ctx.fillText(xv.toFixed(2), x-12, h-pad+18);
+      }
+
+      for(let i=0;i<=5;i++){
+        const yv = ymin + i * yspan / 5;
+        const y = Y(yv);
+        ctx.beginPath();
+        ctx.moveTo(pad, y);
+        ctx.lineTo(w-pad, y);
+        ctx.stroke();
+        ctx.fillText(yv.toFixed(2), 6, y+4);
+      }
+
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(pad, pad);
+      ctx.lineTo(pad, h-pad);
+      ctx.lineTo(w-pad, h-pad);
+      ctx.stroke();
+
+      ctx.strokeStyle = '#2563eb';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      data.forEach((d, i) => {
+        const x = X(d[xKey]);
+        const y = Y(d[yKey]);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'bold 14px Arial';
+      ctx.fillText(title, 16, 22);
+
+      ctx.font = '12px Arial';
+      ctx.fillText(xLabel, w/2 - 12, h-10);
+
+      ctx.save();
+      ctx.translate(14, h/2);
+      ctx.rotate(-Math.PI/2);
+      ctx.fillText(yLabel, -20, 0);
+      ctx.restore();
+    }
+
+    function toComma(v, digits = 4){
+      return Number(v).toFixed(digits).replace('.', ',');
+    }
+
+    function exportCSV(){
+      const rows = buildRows(getModel());
+      const header = ['t (s)','x (m)','y (m)','vx (m/s)','vy (m/s)','ax (m/s²)','ay (m/s²)','v (m/s)'];
+      const lines = [header.join(';')];
+      rows.forEach(r => lines.push([r.t,r.x,r.y,r.vx,r.vy,r.ax,r.ay,r.v].map(v => toComma(v, 4)).join(';')));
+      downloadText(lines.join('\n'), 'tiro-parabolico-datos.csv', 'text/csv;charset=utf-8;');
+    }
+
+    function exportExcel(){
+      const rows = buildRows(getModel());
+      let htmlTable = '<table border="1"><tr><th>t (s)</th><th>x (m)</th><th>y (m)</th><th>vx (m/s)</th><th>vy (m/s)</th><th>ax (m/s²)</th><th>ay (m/s²)</th><th>v (m/s)</th></tr>';
+      rows.forEach(r => {
+        htmlTable += `<tr>
+          <td>${toComma(r.t, 4)}</td>
+          <td>${toComma(r.x, 4)}</td>
+          <td>${toComma(r.y, 4)}</td>
+          <td>${toComma(r.vx, 4)}</td>
+          <td>${toComma(r.vy, 4)}</td>
+          <td>${toComma(r.ax, 4)}</td>
+          <td>${toComma(r.ay, 4)}</td>
+          <td>${toComma(r.v, 4)}</td>
+        </tr>`;
+      });
+      htmlTable += '</table>';
+      const excelContent = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office"
+              xmlns:x="urn:schemas-microsoft-com:office:excel"
+              xmlns="http://www.w3.org/TR/REC-html40">
+        <head><meta charset="UTF-8"></head>
+        <body>${htmlTable}</body></html>`;
+      downloadText(excelContent, 'tiro-parabolico-datos.xls', 'application/vnd.ms-excel');
+    }
+
+    async function copyTableToClipboard(){
+      const rows = buildRows(getModel());
+      const header = ['t (s)','x (m)','y (m)','vx (m/s)','vy (m/s)','ax (m/s²)','ay (m/s²)','v (m/s)'];
+      const lines = [header.join('\t')];
+      rows.forEach(r => lines.push([r.t,r.x,r.y,r.vx,r.vy,r.ax,r.ay,r.v].map(v => toComma(v, 4)).join('\t')));
+      const text = lines.join('\n');
+      try{
+        await navigator.clipboard.writeText(text);
+        controls.copyTableBtn.textContent = '✅ Tabla copiada';
+        setTimeout(() => controls.copyTableBtn.textContent = '📋 Copiar tabla', 1600);
+      }catch(e){
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        controls.copyTableBtn.textContent = '✅ Tabla copiada';
+        setTimeout(() => controls.copyTableBtn.textContent = '📋 Copiar tabla', 1600);
+      }
+    }
+
+    function downloadText(content, filename, mime){
+      const blob = new Blob([content], { type: mime });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function drawAll(){
+      const m = getModel();
+      state.t = clamp(state.t, 0, m.flightTime);
+      const current = pointAt(state.t, m);
+      const rows = buildRows(m);
+
+      updatePanels(m, current);
+      drawScene(m, current, rows);
+      fillTable(rows);
+      drawChart('chartXT', rows, 't', 'x', 'Posición horizontal en función del tiempo', 't (s)', 'x (m)');
+      drawChart('chartYT', rows, 't', 'y', 'Posición vertical en función del tiempo', 't (s)', 'y (m)');
+      drawChart('chartVYT', rows, 't', 'vy', 'Velocidad vertical en función del tiempo', 't (s)', 'vy (m/s)');
+      drawChart('chartYX', rows, 'x', 'y', 'Trayectoria y en función de x', 'x (m)', 'y (m)');
+    }
+
+    function animate(ts){
+      const m = getModel();
+      if (state.playing){
+        if (state.lastTime == null) {
+          state.lastTime = ts;
+        } else {
+          const dt = (ts - state.lastTime) / 1000 * m.speedFactor;
+          state.lastTime = ts;
+          state.t += dt * state.direction;
+
+          if (state.direction === 1 && state.t >= m.flightTime){
+            state.t = m.flightTime;
+            state.playing = false;
+            state.lastTime = null;
+            controls.playBtn.textContent = '▶ Reproducir';
+            controls.backBtn.textContent = '◀ Hacia atrás';
+          }
+
+          if (state.direction === -1 && state.t <= 0){
+            state.t = 0;
+            state.playing = false;
+            state.lastTime = null;
+            controls.playBtn.textContent = '▶ Reproducir';
+            controls.backBtn.textContent = '◀ Hacia atrás';
+          }
+        }
+      }
+      drawAll();
+      requestAnimationFrame(animate);
+    }
+
+    drawAll();
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>
